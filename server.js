@@ -5,16 +5,21 @@ import fs from "fs";
 import dotenv from "dotenv";
 import axios from "axios";
 
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
-
-
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Allow frontend deployment
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://healthanalyser.vercel.app" // your frontend domain
+  ]
+}));
+
 app.use(express.json());
 
-// ---- Multer File Upload Config ----
+// File upload system
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
@@ -23,22 +28,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ---- OpenRouter Config ----
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
-if (!OPENROUTER_API_KEY) {
-  console.error("❌ OPENROUTER_API_KEY is missing. Please set it in your .env file.");
-}
-
-const openRouter = axios.create({
-  baseURL: "https://openrouter.ai/api/v1",
-  headers: {
-    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-    "Content-Type": "application/json"
-  }
-});
-
-// ---- API Route ----
+// Main API route
 app.post("/analyze", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -61,14 +51,7 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
                 }
               },
               {
-                text: `Analyze this medical report and return the result in the following format:
-
-                1. Summary
-                2. Abnormal Values
-                3. Possible Medical Conditions
-                4. Diet & Lifestyle Recommendations
-                5. Urgency Level
-                `
+                text: `Analyze this medical report and return: Summary, Abnormal Values, Possible Conditions, Diet Recommendation and Urgency level.`
               }
             ]
           }
@@ -76,25 +59,24 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
       }
     );
 
-    const result = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+    const result = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
 
-    return res.json({
-      success: true,
-      result
-    });
+    return res.json({ success: true, result });
 
   } catch (error) {
     console.log("❌ Error:", error.response?.data || error.message);
-
     return res.status(500).json({
       success: false,
-      error: error.response?.data || "Failed to process PDF"
+      error: "Failed to analyze report. Try again later."
     });
   }
 });
 
-// ---- Start Server ----
+// Default route message
+app.get("/", (req, res) => {
+  res.send("Backend running ✔️");
+});
+
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Health Analyzer Backend Running at http://localhost:${PORT}`);
-});  
+app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
