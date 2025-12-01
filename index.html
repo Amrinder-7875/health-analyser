@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Analyzer</title>
+
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --text: #111;
+            --card-bg: #ffffffcc;
+            --button: #0078ff;
+        }
+
+        body.dark {
+            --bg: #0e1217;
+            --text: #f8f8f8;
+            --card-bg: #1c1f25cc;
+            --button: #00b7ff;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: .3s;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,.1);
+            animation: fadeIn .5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            margin-bottom: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        #fileInput {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #888;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            background: var(--button);
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.03);
+        }
+
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
+        }
+
+        .status-box {
+            margin-top: 18px;
+            padding: 14px;
+            display: none;
+            border-radius: 10px;
+            font-size: 15px;
+            animation: fadeIn .5s ease;
+        }
+
+        #loadingState { background: #fff4cc; border-left: 5px solid #ffb600; }
+        #errorState   { background: #ffd6d6; border-left: 5px solid red; }
+        #resultsState { background: #d9ffe3; border-left: 5px solid #00c853; }
+        
+        #themeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+
+<span id="themeToggle">🌙</span>
+
+<div class="container">
+    <h2>🩺 AI Health Report Analyzer</h2>
+    <p>Upload a medical report and get a smart summary in seconds.</p>
+
+    <input id="fileInput" type="file" accept="application/pdf">
+
+    <p id="fileName" style="font-weight: bold;"></p>
+
+    <button id="analyzeBtn" disabled>Analyze Report</button>
+
+    <div id="loadingState" class="status-box">⏳ Analyzing your report...</div>
+    <div id="errorState" class="status-box"></div>
+    <div id="resultsState" class="status-box"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
