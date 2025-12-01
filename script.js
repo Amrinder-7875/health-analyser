@@ -1,90 +1,64 @@
-console.log("🔥 Frontend Loaded");
+// Auto switch backend URL based on environment
+const backendURL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000" 
+    : "https://health-analyser.onrender.com"; // <-- Your Render backend URL
 
-const fileInput = document.getElementById("fileInput");
-const fileNameText = document.getElementById("fileName");
-const analyzeBtn = document.getElementById("analyzeBtn");
-const loadingBox = document.getElementById("loadingState");
-const errorBox = document.getElementById("errorState");
-const resultsBox = document.getElementById("resultsState");
+
+const fileInput = document.getElementById("file-input");
+const analyzeBtn = document.getElementById("analyze-btn");
+const resultBox = document.getElementById("result");
+const statusText = document.getElementById("status");
 
 let selectedFile = null;
 
+// Detect file
 fileInput.addEventListener("change", (e) => {
-    selectedFile = e.target.files[0];
-    if(selectedFile){
-        fileNameText.innerText = "Selected: " + selectedFile.name;
-        analyzeBtn.disabled = false;
-    }
+  selectedFile = e.target.files[0];
+  statusText.textContent = selectedFile
+    ? `Selected: ${selectedFile.name}`
+    : "No file selected.";
+  resultBox.innerHTML = "";
 });
 
-// Analyze button listener
-analyzeBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("BUTTON CLICKED");
+// Button click
+analyzeBtn.addEventListener("click", async () => {
+  if (!selectedFile) {
+    alert("Please upload a PDF file first.");
+    return;
+  }
 
-    if (!selectedFile) {
-        showError("Please upload a file");
-        return;
-    }
+  statusText.innerHTML = "⏳ Uploading & Analyzing...";
+  resultBox.innerHTML = "";
+  analyzeBtn.disabled = true;
 
-    loadingBox.style.display = "block";
-    resultsBox.style.display = "none";
-    errorBox.style.display = "none";
-    analyzeBtn.disabled = true;
-
-    await sendToAPI();
-
-    loadingBox.style.display = "none";
-    analyzeBtn.disabled = false;
-});
-// 🌙 THEME TOGGLE
-const themeToggle = document.getElementById("themeToggle");
-
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-    themeToggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
-});
-
-async function sendToAPI() {
+  try {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    console.log("📤 Sending file to backend...");
+    const response = await fetch(`${backendURL}/analyze`, {
+      method: "POST",
+      body: formData,
+    });
 
-    try {
-        const response = await fetch("http://localhost:3000/analyze", {
-            method: "POST",
-            body: formData
-        });
-        console.log("STATUS:", response.status);
-
-        const data = await response.json();
-        console.log("📥 API RESPONSE:", data);
-
-        if (!data.success) {
-            showError(data.error || "Something went wrong.");
-        } else {
-            showResults(data.result);
-        }
-    } catch (err) {
-        console.error("❌ Fetch Error:", err);
-        showError("Unable to connect to server.");
+    if (!response.ok) {
+      throw new Error("Server error. Please try again.");
     }
-}
 
-function showResults(text) {
-    const formatted = text
-        .replace(/\n\n/g, "<br><br>")
-        .replace(/\n/g, "<br>")
-        .trim();
+    const data = await response.json();
 
-    resultsBox.innerHTML = formatted;
-    resultsBox.style.display = "block";
-    errorBox.style.display = "none";
-}
+    if (!data.success) {
+      throw new Error(data.error || "Failed to analyze.");
+    }
 
-function showError(msg) {
-    errorBox.innerText = msg;
-    errorBox.style.display = "block";
-    resultsBox.style.display = "none";
-}
+    resultBox.innerHTML = `<pre>${data.result}</pre>`;
+    statusText.innerHTML = "✅ Analysis complete.";
+
+  } catch (error) {
+    console.error(error);
+    resultBox.innerHTML = `<p style="color:red;">❌ ${error.message}</p>`;
+    statusText.innerHTML = "⚠️ Unable to connect to server. Check API or network.";
+  }
+
+  analyzeBtn.disabled = false;
+});
