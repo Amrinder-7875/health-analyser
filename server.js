@@ -90,7 +90,7 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
 
     // 3) Call OpenRouter chat completion
     const completion = await openRouter.post("/chat/completions", {
-      model: "meta-llama/llama-3.1-8b-instruct:free",
+      model: "google/gemini-2.0-flash-lite-preview",
       messages: [
         {
           role: "system",
