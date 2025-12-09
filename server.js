@@ -90,7 +90,7 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
 
     // 3) Call OpenRouter chat completion
     const completion = await openRouter.post("/chat/completions", {
-  model: "deepseek/deepseek-r1-distill-qwen-7b",
+model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
