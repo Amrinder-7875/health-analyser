@@ -1,231 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI Health Reporter</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Analyzer</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --text: #111;
+            --card-bg: #ffffffcc;
+            --button: #0078ff;
+        }
 
-<style>
-/* -----------------------------------
-   Theme Tokens
------------------------------------ */
-:root {
-  --bg: linear-gradient(180deg, #eef2ff, #ffffff);
-  --card-bg: #fff;
-  --text: #222;
-  --subtle: #555;
-  --border: #cfd7ff;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --radius: 16px;
-}
+        body.dark {
+            --bg: #0e1217;
+            --text: #f8f8f8;
+            --card-bg: #1c1f25cc;
+            --button: #00b7ff;
+        }
 
-body.dark {
-  --bg: linear-gradient(180deg, #0c0c11, #15171c);
-  --card-bg: #1f2127;
-  --text: #f5f5f5;
-  --subtle: #c5c5c5;
-  --border: #36384a;
-  --primary: #45b2ff;
-  --primary-hover: #1198f7;
-}
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: .3s;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
 
-/* -----------------------------------
-   Layout + Animations
------------------------------------ */
-body {
-  font-family: "Inter", sans-serif;
-  background: var(--bg);
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  padding: 40px;
-  color: var(--text);
-  transition: 0.4s;
-}
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,.1);
+            animation: fadeIn .5s ease;
+        }
 
-.container {
-  background: var(--card-bg);
-  padding: 40px;
-  width: 100%;
-  max-width: 720px;
-  border-radius: var(--radius);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-  border: 1px solid var(--border);
-  animation: fadeIn .5s ease;
-}
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+        h2 {
+            margin-bottom: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
 
-/* -----------------------------------
-   Header
------------------------------------ */
-.header-icon {
-  font-size: 45px;
-  display: flex;
-  justify-content: center;
-}
+        #fileInput {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #888;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
 
-h2 {
-  text-align: center;
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
+        button {
+            width: 100%;
+            border: none;
+            background: var(--button);
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-.subtitle {
-  text-align: center;
-  font-size: 15px;
-  color: var(--subtle);
-}
+        button:hover:not(:disabled) {
+            transform: scale(1.03);
+        }
 
-/* -----------------------------------
-   Upload Area
------------------------------------ */
-.upload-area {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 30px;
-  margin-top: 30px;
-  text-align: center;
-  cursor: pointer;
-  transition: .3s;
-}
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
+        }
 
-.upload-area:hover {
-  border-color: var(--primary);
-  background: rgba(99,102,241,0.04);
-}
+        .status-box {
+            margin-top: 18px;
+            padding: 14px;
+            display: none;
+            border-radius: 10px;
+            font-size: 15px;
+            animation: fadeIn .5s ease;
+        }
 
-/* -----------------------------------
-   Button
------------------------------------ */
-button {
-  width: 100%;
-  padding: 15px;
-  background: var(--primary);
-  color: white;
-  font-size: 17px;
-  border-radius: var(--radius);
-  border: none;
-  margin-top: 22px;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-button:hover:not(:disabled) {
-  background: var(--primary-hover);
-  transform: scale(1.02);
-}
-
-button:disabled {
-  background: #a5a5a5;
-  cursor: not-allowed;
-}
-
-/* -----------------------------------
-   Status Boxes
------------------------------------ */
-.status-box {
-  margin-top: 18px;
-  padding: 14px;
-  border-radius: 10px;
-  font-size: 15px;
-  display: none;
-}
-
-#loadingState { background: #fff3cd; border-left: 6px solid #ffb300; }
-#errorState   { background: #ffd6d6; border-left: 6px solid #ff3b3b; }
-#resultsState { background: #d4ffdd; border-left: 6px solid #29d677; }
-
-/* -----------------------------------
-   Features Row
------------------------------------ */
-.features {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 35px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--subtle);
-}
-
-.features div {
-  flex: 1;
-}
-
-.features span {
-  font-size: 20px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* -----------------------------------
-   Theme Toggle Button
------------------------------------ */
-#themeToggle {
-  position: fixed;
-  right: 25px;
-  top: 25px;
-  font-size: 22px;
-  cursor: pointer;
-  background: var(--card-bg);
-  padding: 10px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  transition: .3s;
-}
-#themeToggle:hover {
-  transform: scale(1.1);
-}
-</style>
+        #loadingState { background: #fff4cc; border-left: 5px solid #ffb600; }
+        #errorState   { background: #ffd6d6; border-left: 5px solid red; }
+        #resultsState { background: #d9ffe3; border-left: 5px solid #00c853; }
+        
+        #themeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 22px;
+        }
+    </style>
 </head>
 <body>
 
 <span id="themeToggle">🌙</span>
 
 <div class="container">
+    <h2>🩺 AI Health Report Analyzer</h2>
+    <p>Upload a medical report and get a smart summary in seconds.</p>
 
-  <div class="header-icon">🩺</div>
-  <h2>AI Health Report Analyzer</h2>
-  <p class="subtitle">Upload your medical report and get intelligent insights powered by AI</p>
+    <input id="fileInput" type="file" accept="application/pdf">
 
-  <label class="upload-area" for="fileInput">
-    📄 <br><br>
-    <strong>Click to upload or drag and drop</strong><br>
-    <small>PDF only • Max 10MB</small>
-  </label>
-  <input id="fileInput" type="file" accept="application/pdf" style="display:none;" />
+    <p id="fileName" style="font-weight: bold;"></p>
 
-  <p id="fileName" style="margin-top:10px; font-weight:600;"></p>
+    <button id="analyzeBtn" disabled>Analyze Report</button>
 
-  <button id="analyzeBtn" disabled>Analyze Report</button>
-
-  <div id="loadingState" class="status-box"></div>
-  <div id="errorState" class="status-box"></div>
-  <div id="resultsState" class="status-box"></div>
-
-  <div class="features">
-    <div><span>⚡</span>Fast Analysis</div>
-    <div><span>🔒</span>Secure & Private</div>
-    <div><span>🤖</span>AI Powered</div>
-    <div><span>📊</span>Detailed Insights</div>
-  </div>
+    <div id="loadingState" class="status-box">⏳ Analyzing your report...</div>
+    <div id="errorState" class="status-box"></div>
+    <div id="resultsState" class="status-box"></div>
 </div>
 
-<script>
-document.getElementById("themeToggle").onclick = () => {
-  const isDark = document.body.classList.toggle("dark");
-  document.getElementById("themeToggle").textContent = isDark ? "☀️" : "🌙";
-};
-</script>
-
 <script src="script.js"></script>
-
 </body>
 </html>
