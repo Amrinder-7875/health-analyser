@@ -1,4 +1,67 @@
-// ---- API Route (OpenRouter + pdf-parse) ----
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import dotenv from "dotenv";
+import axios from "axios";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
+
+// Load environment variables
+dotenv.config();
+
+// Create Express app
+const app = express();
+
+// ---- CORS CONFIG ----
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://health-analyser.vercel.app",
+  "https://health-analyser.onrender.com",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+app.options("*", cors());
+app.use(express.json());
+
+// ---- MULTER FILE UPLOAD CONFIG ----
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage });
+
+// ---- OPENROUTER CONFIG ----
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+if (!OPENROUTER_API_KEY) {
+  console.error("❌ OPENROUTER_API_KEY is missing. Please set it in your environment.");
+}
+
+const openRouter = axios.create({
+  baseURL: "https://openrouter.ai/api/v1",
+  headers: {
+    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+});
+
+// ---- ROOT ROUTE (HEALTH CHECK) ----
+app.get("/", (req, res) => {
+  res.send("✅ Health Analyzer Backend is Running");
+});
+
+// ---- API ROUTE (OpenRouter + pdf-parse) ----
 app.post("/analyze", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -15,7 +78,7 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
     if (!pdfText.trim()) {
       return res.status(400).json({
         success: false,
-        error: "Could not extract text from PDF. Please upload a text-based report."
+        error: "Could not extract text from PDF. Please upload a text-based report.",
       });
     }
 
@@ -32,14 +95,13 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content:
-            "You are an expert medical assistant. Analyze the user's lab report text and respond clearly, in simple language, without giving definitive diagnoses. Always encourage consulting a real doctor."
+            "You are an expert medical assistant. Analyze the user's lab report text and respond clearly, in simple language, without giving definitive diagnoses. Always encourage consulting a real doctor.",
         },
         {
           role: "user",
-          content:
-            `Here is a medical report. Carefully analyze it and answer in the following structured format:\n\n1. Short Summary (2-3 lines)\n2. Abnormal Values (list with value, normal range, and if it is high/low)\n3. Possible Health Concerns (bullet points, use words like 'may indicate', 'could be related to')\n4. Lifestyle & Diet Suggestions (bullet list)\n5. Urgency (Normal / Monitor / See doctor soon / See doctor urgently)\n\nReport text:\n\n${pdfText}`
-        }
-      ]
+          content: `Here is a medical report. Carefully analyze it and answer in the following structured format:\n\n1. Short Summary (2-3 lines)\n2. Abnormal Values (list with value, normal range, and if it is high/low)\n3. Possible Health Concerns (bullet points, use words like 'may indicate', 'could be related to')\n4. Lifestyle & Diet Suggestions (bullet list)\n5. Urgency (Normal / Monitor / See doctor soon / See doctor urgently)\n\nReport text:\n\n${pdfText}`,
+        },
+      ],
     });
 
     const result =
@@ -51,7 +113,7 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
 
     return res.json({
       success: true,
-      result
+      result,
     });
   } catch (error) {
     const apiError =
@@ -66,7 +128,14 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      error: apiError
+      error: apiError,
     });
   }
+});
+
+// ---- START SERVER ----
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Health Analyzer Backend Running at http://localhost:${PORT}`);
 });
