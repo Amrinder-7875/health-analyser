@@ -1,3 +1,5 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 Overview
 
 The AI Health Report Analyzer is an intelligent web-based tool designed to make medical reports easier to understand. Users can upload a PDF health report, and the system extracts the content, analyzes it using an AI model, and generates a structured summary with key highlights, abnormal values, and health suggestions.
