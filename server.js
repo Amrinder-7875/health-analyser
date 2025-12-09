@@ -86,6 +86,11 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
             ]
           }
         ]
+      },
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
       }
     );
 
