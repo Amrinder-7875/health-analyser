@@ -1,707 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Analyzer - AI Medical Report Analysis</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --border: #e2e8f0;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        body.dark {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
-            animation: rotate 30s linear infinite;
-            z-index: -1;
-        }
-
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background: var(--bg-secondary);
-            backdrop-filter: blur(20px);
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px var(--shadow);
-            border: 1px solid var(--border);
-            animation: fadeInUp 0.6s ease-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: var(--gradient);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        h2 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .upload-section {
-            margin: 2rem 0;
-        }
-
-        .upload-area {
-            border: 3px dashed var(--border);
-            border-radius: 16px;
-            padding: 3rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-primary);
-        }
-
-        .upload-area:hover {
-            border-color: var(--accent);
-            background: var(--bg-secondary);
-            transform: translateY(-2px);
-        }
-
-        .upload-area.drag-over {
-            border-color: var(--accent);
-            background: rgba(59, 130, 246, 0.05);
-            border-style: solid;
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            display: block;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .upload-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .upload-hint {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .file-info {
-            display: none;
-            background: var(--bg-primary);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-top: 1rem;
-            border: 1px solid var(--border);
-            animation: fadeIn 0.4s ease;
-        }
-
-        .file-info.show {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .file-icon {
-            font-size: 2.5rem;
-        }
-
-        .file-details {
-            flex: 1;
-        }
-
-        .file-name {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-            word-break: break-word;
-        }
-
-        .file-size {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .remove-btn {
-            background: none;
-            border: none;
-            color: var(--error);
-            cursor: pointer;
-            font-size: 1.5rem;
-            padding: 0.5rem;
-            transition: transform 0.2s;
-        }
-
-        .remove-btn:hover {
-            transform: scale(1.2);
-        }
-
-        button.analyze-btn {
-            width: 100%;
-            border: none;
-            background: var(--gradient);
-            color: white;
-            padding: 1.2rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-top: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        button.analyze-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        button.analyze-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        button.analyze-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        button.analyze-btn:disabled {
-            background: var(--text-secondary);
-            opacity: 0.5;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .status-box {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            display: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            animation: slideDown 0.4s ease;
-            border-left: 5px solid;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .status-box.show {
-            display: block;
-        }
-
-        #loadingState {
-            background: rgba(245, 158, 11, 0.1);
-            border-color: var(--warning);
-            color: var(--text-primary);
-        }
-
-        #errorState {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: var(--error);
-            color: var(--text-primary);
-        }
-
-        #resultsState {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: var(--success);
-            color: var(--text-primary);
-        }
-
-        .status-icon {
-            font-size: 1.5rem;
-            margin-right: 0.5rem;
-        }
-
-        #themeToggle {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            cursor: pointer;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px var(--shadow);
-            z-index: 1000;
-        }
-
-        #themeToggle:hover {
-            transform: scale(1.1) rotate(20deg);
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s linear infinite;
-            margin-right: 0.5rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .container {
-                padding: 2rem 1.5rem;
-                border-radius: 20px;
-            }
-
-            .header {
-                margin-bottom: 2rem;
-            }
-
-            .logo {
-                width: 70px;
-                height: 70px;
-                font-size: 2.5rem;
-                margin-bottom: 1rem;
-            }
-
-            h2 {
-                font-size: 1.75rem;
-            }
-
-            .subtitle {
-                font-size: 0.95rem;
-            }
-
-            .upload-area {
-                padding: 2rem 1.5rem;
-            }
-
-            .upload-icon {
-                font-size: 3rem;
-            }
-
-            .upload-text {
-                font-size: 1rem;
-            }
-
-            .upload-hint {
-                font-size: 0.85rem;
-            }
-
-            button.analyze-btn {
-                padding: 1rem;
-                font-size: 1rem;
-            }
-
-            #themeToggle {
-                top: 1rem;
-                right: 1rem;
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-
-            .file-info {
-                padding: 1rem;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .file-icon {
-                font-size: 2rem;
-            }
-
-            .status-box {
-                padding: 1.25rem;
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 1.5rem 1rem;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-            }
-
-            .upload-area {
-                padding: 1.5rem 1rem;
-            }
-
-            .upload-icon {
-                font-size: 2.5rem;
-            }
-        }
-
-        /* Features Section */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .feature {
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .feature-text {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            .features {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-                margin-top: 1.5rem;
-                padding-top: 1.5rem;
-            }
-
-            .feature {
-                padding: 0.75rem;
-            }
-
-            .feature-icon {
-                font-size: 1.75rem;
-            }
-
-            .feature-text {
-                font-size: 0.8rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Health Reporter</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* -----------------------------------
+   Theme Tokens
+----------------------------------- */
+:root {
+  --bg: linear-gradient(180deg, #eef2ff, #ffffff);
+  --card-bg: #fff;
+  --text: #222;
+  --subtle: #555;
+  --border: #cfd7ff;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --radius: 16px;
+}
+
+body.dark {
+  --bg: linear-gradient(180deg, #0c0c11, #15171c);
+  --card-bg: #1f2127;
+  --text: #f5f5f5;
+  --subtle: #c5c5c5;
+  --border: #36384a;
+  --primary: #45b2ff;
+  --primary-hover: #1198f7;
+}
+
+/* -----------------------------------
+   Layout + Animations
+----------------------------------- */
+body {
+  font-family: "Inter", sans-serif;
+  background: var(--bg);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text);
+  transition: 0.4s;
+}
+
+.container {
+  background: var(--card-bg);
+  padding: 40px;
+  width: 100%;
+  max-width: 720px;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+  animation: fadeIn .5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* -----------------------------------
+   Header
+----------------------------------- */
+.header-icon {
+  font-size: 45px;
+  display: flex;
+  justify-content: center;
+}
+
+h2 {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 15px;
+  color: var(--subtle);
+}
+
+/* -----------------------------------
+   Upload Area
+----------------------------------- */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 30px;
+  margin-top: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.upload-area:hover {
+  border-color: var(--primary);
+  background: rgba(99,102,241,0.04);
+}
+
+/* -----------------------------------
+   Button
+----------------------------------- */
+button {
+  width: 100%;
+  padding: 15px;
+  background: var(--primary);
+  color: white;
+  font-size: 17px;
+  border-radius: var(--radius);
+  border: none;
+  margin-top: 22px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+button:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.02);
+}
+
+button:disabled {
+  background: #a5a5a5;
+  cursor: not-allowed;
+}
+
+/* -----------------------------------
+   Status Boxes
+----------------------------------- */
+.status-box {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  display: none;
+}
+
+#loadingState { background: #fff3cd; border-left: 6px solid #ffb300; }
+#errorState   { background: #ffd6d6; border-left: 6px solid #ff3b3b; }
+#resultsState { background: #d4ffdd; border-left: 6px solid #29d677; }
+
+/* -----------------------------------
+   Features Row
+----------------------------------- */
+.features {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 35px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.features div {
+  flex: 1;
+}
+
+.features span {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* -----------------------------------
+   Theme Toggle Button
+----------------------------------- */
+#themeToggle {
+  position: fixed;
+  right: 25px;
+  top: 25px;
+  font-size: 22px;
+  cursor: pointer;
+  background: var(--card-bg);
+  padding: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  transition: .3s;
+}
+#themeToggle:hover {
+  transform: scale(1.1);
+}
+</style>
 </head>
 <body>
-    <span id="themeToggle">🌙</span>
-    
-    <div class="container">
-        <div class="header">
-            <div class="logo">🩺</div>
-            <h2>AI Health Report Analyzer</h2>
-            <p class="subtitle">Upload your medical report and get intelligent insights powered by AI in seconds</p>
-        </div>
 
-        <div class="upload-section">
-            <label for="fileInput">
-                <div class="upload-area" id="uploadArea">
-                    <span class="upload-icon">📄</span>
-                    <p class="upload-text">Click to upload or drag and drop</p>
-                    <p class="upload-hint">PDF files only • Max 10MB</p>
-                </div>
-            </label>
-            <input id="fileInput" type="file" accept="application/pdf">
-            
-            <div class="file-info" id="fileInfo">
-                <span class="file-icon">📋</span>
-                <div class="file-details">
-                    <p class="file-name" id="fileName"></p>
-                    <p class="file-size" id="fileSize"></p>
-                </div>
-                <button class="remove-btn" id="removeBtn">✕</button>
-            </div>
-        </div>
+<span id="themeToggle">🌙</span>
 
-        <button class="analyze-btn" id="analyzeBtn" disabled>
-            <span>Analyze Report</span>
-        </button>
+<div class="container">
 
-        <div id="loadingState" class="status-box">
-            <span class="status-icon">⏳</span>
-            <strong>Analyzing your report...</strong>
-            <p style="margin-top: 0.5rem; font-size: 0.9rem;">This may take a few moments</p>
-        </div>
+  <div class="header-icon">🩺</div>
+  <h2>AI Health Report Analyzer</h2>
+  <p class="subtitle">Upload your medical report and get intelligent insights powered by AI</p>
 
-        <div id="errorState" class="status-box">
-            <span class="status-icon">❌</span>
-            <strong>Error:</strong> <span id="errorMessage"></span>
-        </div>
+  <label class="upload-area" for="fileInput">
+    📄 <br><br>
+    <strong>Click to upload or drag and drop</strong><br>
+    <small>PDF only • Max 10MB</small>
+  </label>
+  <input id="fileInput" type="file" accept="application/pdf" style="display:none;" />
 
-        <div id="resultsState" class="status-box">
-            <span class="status-icon">✅</span>
-            <strong>Analysis Complete!</strong>
-            <div id="resultsContent" style="margin-top: 1rem;"></div>
-        </div>
+  <p id="fileName" style="margin-top:10px; font-weight:600;"></p>
 
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">⚡</div>
-                <p class="feature-text">Fast Analysis</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🔒</div>
-                <p class="feature-text">Secure & Private</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎯</div>
-                <p class="feature-text">AI Powered</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📊</div>
-                <p class="feature-text">Detailed Insights</p>
-            </div>
-        </div>
-    </div>
+  <button id="analyzeBtn" disabled>Analyze Report</button>
 
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            body.classList.add('dark');
-            themeToggle.textContent = '☀️';
-        }
+  <div id="loadingState" class="status-box"></div>
+  <div id="errorState" class="status-box"></div>
+  <div id="resultsState" class="status-box"></div>
 
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark');
-            const isDark = body.classList.contains('dark');
-            themeToggle.textContent = isDark ? '☀️' : '🌙';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
+  <div class="features">
+    <div><span>⚡</span>Fast Analysis</div>
+    <div><span>🔒</span>Secure & Private</div>
+    <div><span>🤖</span>AI Powered</div>
+    <div><span>📊</span>Detailed Insights</div>
+  </div>
+</div>
 
-        // File Upload Handling
-        const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const removeBtn = document.getElementById('removeBtn');
-        const analyzeBtn = document.getElementById('analyzeBtn');
+<script>
+document.getElementById("themeToggle").onclick = () => {
+  const isDark = document.body.classList.toggle("dark");
+  document.getElementById("themeToggle").textContent = isDark ? "☀️" : "🌙";
+};
+</script>
 
-        let selectedFile = null;
+<script src="script.js"></script>
 
-        // Drag and Drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('drag-over');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('drag-over');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('drag-over');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type === 'application/pdf') {
-                handleFile(files[0]);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
-
-        function handleFile(file) {
-            selectedFile = file;
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            fileInfo.classList.add('show');
-            analyzeBtn.disabled = false;
-            hideAllStatusBoxes();
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            else return (bytes / 1048576).toFixed(1) + ' MB';
-        }
-
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            selectedFile = null;
-            fileInput.value = '';
-            fileInfo.classList.remove('show');
-            analyzeBtn.disabled = true;
-            hideAllStatusBoxes();
-        });
-
-        // Status Boxes
-        function hideAllStatusBoxes() {
-            document.querySelectorAll('.status-box').forEach(box => {
-                box.classList.remove('show');
-            });
-        }
-
-        function showStatusBox(boxId) {
-            hideAllStatusBoxes();
-            document.getElementById(boxId).classList.add('show');
-        }
-
-        // Analyze Button
-        analyzeBtn.addEventListener('click', () => {
-            if (!selectedFile) return;
-            
-            showStatusBox('loadingState');
-            analyzeBtn.disabled = true;
-
-            // Simulate analysis - replace with your actual API call
-            setTimeout(() => {
-                // Simulate success
-                showStatusBox('resultsState');
-                document.getElementById('resultsContent').innerHTML = 
-                    '<p style="margin-top: 0.5rem;">Your health report has been analyzed successfully. The results show normal parameters across all tested values.</p>';
-                analyzeBtn.disabled = false;
-
-                // For error simulation:
-                // showStatusBox('errorState');
-                // document.getElementById('errorMessage').textContent = 'Failed to process the file. Please try again.';
-                // analyzeBtn.disabled = false;
-            }, 3000);
-        });
-    </script>
 </body>
 </html>
